@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# DataCode downstream adaptation of Kilo Code's root `install` script.
-# Keep platform and PATH handling close to upstream; DataCode-specific release
+# Adapted from the MIT-licensed installer inherited with the current upstream baseline.
+# Platform and PATH handling stay close to that source; DataCode-specific release
 # resolution and integrity validation are intentionally isolated below.
 APP=datacode
 REPOSITORY=sagiller/datacode-releases
@@ -73,6 +73,11 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
+if [ -n "$binary_path" ] && [ -n "$requested_version" ]; then
+    echo -e "${RED}Error: --binary and --version cannot be used together${NC}"
+    exit 1
+fi
+
 INSTALL_DIR=$HOME/.datacode/bin
 mkdir -p "$INSTALL_DIR"
 
@@ -84,6 +89,10 @@ if [ -n "$binary_path" ]; then
     fi
     specific_version="local"
 else
+    if ! command -v curl >/dev/null 2>&1; then
+        echo -e "${RED}Error: 'curl' is required but not installed.${NC}"
+        exit 1
+    fi
     raw_os=$(uname -s)
     os=$(echo "$raw_os" | tr '[:upper:]' '[:lower:]')
     case "$raw_os" in
